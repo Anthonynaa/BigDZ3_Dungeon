@@ -38,14 +38,12 @@ void Battle::StartBattle() {
   std::cout << "\n=== BATTLE START ===\n";
 
   while (!AllHeroesDead() && !AllEnemiesDead()) {
-    // ===== HERO PHASE =====
     for (const auto& hero : heroes_) {
       if (!hero->IsAlive()) continue;
       if (AllEnemiesDead()) break;
       HeroTurn(hero);
     }
 
-    // ===== REMOVE DEAD ENEMIES =====
     enemies_.erase(std::remove_if(enemies_.begin(), enemies_.end(),
                                   [](const std::shared_ptr<Enemy>& e) {
                                     return !e->IsAlive();
@@ -54,14 +52,12 @@ void Battle::StartBattle() {
 
     if (AllEnemiesDead()) break;
 
-    // ===== ENEMY PHASE =====
     for (const auto& enemy : enemies_) {
       if (!enemy->IsAlive()) continue;
       if (AllHeroesDead()) break;
       EnemyTurn(enemy);
     }
 
-    // ===== REMOVE DEAD HEROES =====
     heroes_.erase(std::remove_if(heroes_.begin(), heroes_.end(),
                                  [](const std::shared_ptr<Hero>& h) {
                                    return !h->IsAlive();
@@ -97,10 +93,13 @@ void Battle::HeroTurn(const std::shared_ptr<Hero>& hero) {
     if (idx >= 0 && idx < static_cast<int>(enemies_.size())) {
       int dmg = hero->DealDamage();
       enemies_[idx]->TakeDamage(dmg);
+
       std::cout << hero->GetName() << " deals " << dmg << " damage to "
                 << enemies_[idx]->GetName() << "\n";
     }
-  } else if (choice == 2) {
+  }
+
+  else if (choice == 2) {
     if (!hero->CanUseAbility()) {
       std::cout << "Not enough MP!\n";
       return;
@@ -109,27 +108,40 @@ void Battle::HeroTurn(const std::shared_ptr<Hero>& hero) {
     hero->UseAbility();
 
     if (hero->GetRole() == HeroRole::CLERIC) {
-      auto it = std::find_if(heroes_.begin(), heroes_.end(), [](const auto& h) {
-        return h->IsAlive() && h->GetCurrentHp() < h->GetMaxHp();
-      });
-      if (it != heroes_.end()) {
+      std::shared_ptr<Hero> target = nullptr;
+
+      for (const auto& h : heroes_) {
+        if (h->IsAlive() && h->GetCurrentHp() < h->GetMaxHp()) {
+          target = h;
+          break;
+        }
+      }
+
+      if (target) {
         int heal = 30 + 8 * hero->GetLevel();
-        (*it)->RestoreHp(heal);
-        std::cout << (*it)->GetName() << " healed for " << heal << "\n";
+        target->RestoreHp(heal);
+
+        std::cout << target->GetName() << " healed for " << heal << " HP\n";
       }
     }
   }
 }
 
 void Battle::EnemyTurn(const std::shared_ptr<Enemy>& enemy) {
-  auto it = std::find_if(heroes_.begin(), heroes_.end(),
-                         [](const auto& h) { return h->IsAlive(); });
-  if (it == heroes_.end()) return;
+  std::shared_ptr<Hero> target = nullptr;
+
+  for (const auto& hero : heroes_) {
+    if (hero->IsAlive()) {
+      target = hero;
+      break;
+    }
+  }
+  if (!target) return;
 
   int dmg = enemy->DealDamage();
-  (*it)->TakeDamage(dmg);
+  target->TakeDamage(dmg);
 
-  std::cout << enemy->GetName() << " attacks " << (*it)->GetName() << " for "
+  std::cout << enemy->GetName() << " attacks " << target->GetName() << " for "
             << dmg << " damage\n";
 }
 
