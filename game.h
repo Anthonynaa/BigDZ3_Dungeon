@@ -42,6 +42,7 @@ class Game {
   static constexpr int kRecruitCost = 100;
   static constexpr int kRefreshRecruitCost = 50;
   static constexpr int kHealCost = 50;
+  static constexpr int kStartingGold = 250;
 };
 
 #endif

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <limits>
 
-Game::Game() : gold_(250) {
+Game::Game() : gold_(kStartingGold) {
   std::srand(static_cast<unsigned int>(std::time(nullptr)));
   recruit_list_.clear();
   party_.clear();
